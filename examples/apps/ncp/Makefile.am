@@ -39,6 +39,7 @@ CPPFLAGS_COMMON                                                       += \
     $(NULL)
 
 LDADD_COMMON                                                          += \
+    $(top_srcdir)/../../bin/libwf_commline.a                        \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \
