@@ -90,6 +90,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
 #endif
 
     gNodeId = (uint32_t)strtol(aArgVector[1], &endptr, 0);
+    INFO("Using gNodeId=%d\n", gNodeId);
 
     if (*endptr != '\0' || gNodeId >= WELLKNOWN_NODE_ID)
     {

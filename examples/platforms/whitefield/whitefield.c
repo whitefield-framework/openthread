@@ -22,7 +22,7 @@
 
 #include "platform-whitefield.h"
 
-int whitefield_init(int nodeid)
+int wfInit(int nodeid)
 {
     if(cl_init(MTYPE(STACKLINE, nodeid), CL_ATTACHQ)!=CL_SUCCESS) {
         ERROR("commline init failed, exiting...\n");
@@ -31,7 +31,20 @@ int whitefield_init(int nodeid)
     return 0;
 }
 
-void whitefield_deinit(void)
+void wfDeinit(void)
 {
     cl_cleanup();
 }
+
+void wfSendPacket(uint8_t *buf, size_t len)
+{
+	DEFINE_MBUF(mbuf);
+
+	mbuf->len = len;
+	memcpy(mbuf->buf, buf, len);
+	mbuf->src_id = gNodeId - 1;
+	mbuf->dst_id = !(gNodeId - 1);
+	INFO("src:%0x dst:%0x len:%d\n", mbuf->src_id, mbuf->dst_id, mbuf->len);
+	cl_sendto_q(MTYPE(AIRLINE, CL_MGR_ID), mbuf, mbuf->len + sizeof(msg_buf_t));
+}
+

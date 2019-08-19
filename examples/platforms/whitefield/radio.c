@@ -388,7 +388,7 @@ void platformRadioInit(void)
     memset(&sockaddr, 0, sizeof(sockaddr));
     sockaddr.sin_family = AF_INET;
 
-    whitefield_init(gNodeId);
+    wfInit(gNodeId);
     INFO("Inited radio gNodeId:%d\n", gNodeId);
 
     offset = getenv("PORT_OFFSET");
@@ -449,7 +449,7 @@ void platformRadioInit(void)
 void platformRadioDeinit(void)
 {
     close(sSockFd);
-    whitefield_deinit();
+    wfDeinit();
 }
 
 bool otPlatRadioIsEnabled(otInstance *aInstance)
@@ -616,36 +616,15 @@ void radioReceive(otInstance *aInstance)
     }
 }
 
+#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
+#error Time sync not supported at the moment!
+#endif
+#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
+#error IE config header not supported
+#endif
+
 void radioSendMessage(otInstance *aInstance)
 {
-#if OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-    bool notifyFrameUpdated = false;
-
-#if OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-    if (sTransmitFrame.mIeInfo->mTimeIeOffset != 0)
-    {
-        uint8_t *timeIe = sTransmitFrame.mPsdu + sTransmitFrame.mIeInfo->mTimeIeOffset;
-        uint64_t time   = (uint64_t)((int64_t)otPlatTimeGet() + sTransmitFrame.mIeInfo->mNetworkTimeOffset);
-
-        *timeIe = sTransmitFrame.mIeInfo->mTimeSyncSeq;
-
-        *(++timeIe) = (uint8_t)(time & 0xff);
-        for (uint8_t i = 1; i < sizeof(uint64_t); i++)
-        {
-            time        = time >> 8;
-            *(++timeIe) = (uint8_t)(time & 0xff);
-        }
-
-        notifyFrameUpdated = true;
-    }
-#endif // OPENTHREAD_CONFIG_ENABLE_TIME_SYNC
-
-    if (notifyFrameUpdated)
-    {
-        otPlatRadioFrameUpdated(aInstance, &sTransmitFrame);
-    }
-#endif // OPENTHREAD_CONFIG_HEADER_IE_SUPPORT
-
     sTransmitMessage.mChannel = sTransmitFrame.mChannel;
 
     otPlatRadioTxStarted(aInstance, &sTransmitFrame);
@@ -739,7 +718,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
     sockaddr.sin_family = AF_INET;
     inet_pton(AF_INET, "127.0.0.1", &sockaddr.sin_addr);
 
-    for (i = 1; i <= WELLKNOWN_NODE_ID; i++)
+    for (i = 0; i <= WELLKNOWN_NODE_ID; i++)
     {
         ssize_t rval;
 
@@ -752,13 +731,9 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
         rval = sendto(sSockFd, (const char *)aMessage, 1 + aFrame->mLength, 0, (struct sockaddr *)&sockaddr,
                       sizeof(sockaddr));
 
-        if (rval < 0)
-        {
-            perror("sendto");
-            exit(EXIT_FAILURE);
-        }
         INFO("TX on Radio (rem-port:%d): rval=%zd\n", ntohs(sockaddr.sin_port), rval);
     }
+    // wfSendPacket((uint8_t*)aMessage, 1 + aFrame->mLength);
 }
 
 void radioSendAck(void)
