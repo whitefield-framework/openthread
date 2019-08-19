@@ -733,7 +733,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 
         INFO("TX on Radio (rem-port:%d): rval=%zd\n", ntohs(sockaddr.sin_port), rval);
     }
-    // wfSendPacket((uint8_t*)aMessage, 1 + aFrame->mLength);
+    wfSendPacket(aMessage->mPsdu, aFrame->mLength);
 }
 
 void radioSendAck(void)

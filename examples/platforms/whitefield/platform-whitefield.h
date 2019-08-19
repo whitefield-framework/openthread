@@ -61,7 +61,6 @@
 #include "openthread-core-config.h"
 #include "platform-config.h"
 #include <commline/commline.h>  //Whitefield COMMLINE
-#include <commline/cl_stackline_helpers.h>
 #include "whitefield.h"
 
 enum

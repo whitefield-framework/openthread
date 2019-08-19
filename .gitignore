@@ -4,6 +4,8 @@
 *.gcda
 *.gcno
 *.log
+*.out
+tags
 *.o
 *.lo
 *.la

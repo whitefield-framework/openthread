@@ -21,6 +21,10 @@
 #define _WHITEFIELD_C_
 
 #include "platform-whitefield.h"
+#include <commline/cl_stackline_helpers.h>
+#include <commline/pcap_util.h>
+
+void *g_pcapHandle;
 
 int wfInit(int nodeid)
 {
@@ -42,9 +46,20 @@ void wfSendPacket(uint8_t *buf, size_t len)
 
 	mbuf->len = len;
 	memcpy(mbuf->buf, buf, len);
-	mbuf->src_id = gNodeId - 1;
-	mbuf->dst_id = !(gNodeId - 1);
-	INFO("src:%0x dst:%0x len:%d\n", mbuf->src_id, mbuf->dst_id, mbuf->len);
+	mbuf->src_id = gNodeId;
+	mbuf->dst_id = CL_DSTID_MACHDR_PRESENT;
+	INFO("src:%0x dst:%0x (CL_DSTID_MACHDR_PRESENT=%0x) len:%d\n",
+         mbuf->src_id, mbuf->dst_id, CL_DSTID_MACHDR_PRESENT, mbuf->len);
+
+    if (!g_pcapHandle && getenv("OT-PCAP")) {
+        char fname[512];
+        snprintf(fname, sizeof(fname), "%s/openthread-%04x.pcap", getenv("OT-PCAP"), gNodeId);
+        g_pcapHandle = pcap_init(fname);
+    }
+    if (g_pcapHandle) {
+        pcap_write(g_pcapHandle, buf, len);
+    }
+
 	cl_sendto_q(MTYPE(AIRLINE, CL_MGR_ID), mbuf, mbuf->len + sizeof(msg_buf_t));
 }
 
